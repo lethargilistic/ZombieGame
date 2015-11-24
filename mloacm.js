@@ -33,6 +33,31 @@ MLOACM.prototype.constructor = MLOACM;
 // you may access a list of rocks from this.game.rocks
 // you may access a list of players from this.game.players
 
+//Returns c
+var pythagoras = function(a, b)
+{
+	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+}
+
+var leadRockThrow = function(human, zombie)
+{
+	//Figure out how fast rock moves
+	var rockVector = {x: human.velocity.x * 2, y: human.velocity.y * 2};
+	var rockVelocity = pythagoras(rockVector.x, rockVector.y)
+	
+	//calculate how long it will take for the rock to hit the zombie
+	var distanceToZombie = pythagoras(human.x - zombie.x, human.y - zombie.y);
+	var timeToZombie = distanceToZombie / rockVelocity;
+	
+	//estimate zombie's new position
+	var zombieFuturePosition = {x:zombie.x + zombie.velocity.x * timeToZombie,
+							y:zombie.y + zombie.velocity.y * timeToZombie};
+	
+	console.log(zombie.x, zombie.y, zombieFuturePosition);
+	
+	return zombieFuturePosition;
+}
+
 MLOACM.prototype.selectAction = function () {
 
     var action = { direction: { x: 0, y: 0 }, throwRock: false, target: null};
@@ -69,7 +94,7 @@ MLOACM.prototype.selectAction = function () {
     }
 
     if (target) {
-        action.target = target;
+        action.target = leadRockThrow(this, target);
         action.throwRock = true;
     }
     return action;

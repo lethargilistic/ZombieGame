@@ -1,0 +1,20 @@
+
+
+#Tasks of the agent
+* Calculate the Time until each zombie will reach us. Avoid the one that will hit soonest.
+* Pick up rocks (2 max)
+* Run away from zombie.
+** Avoid clusters
+* Protect other humans
+*Check if position is really really close to the last 1 or 2 positions. If so, make big change in a random direction.
+
+#Traits of zombies
+* The Zombies have a 500 visual radius.
+* They are chasing humans.
+** Can we determine their target?
+
+#Ideas
+* Collect rocks when there are no zombies around or they are within your running trajectory.
+* Increase speed over time so that other humans who have constant speed are shafted.
+*Avoid corners
+** Running in a circle.
