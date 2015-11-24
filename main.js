@@ -327,7 +327,7 @@ ASSET_MANAGER.downloadAll(function () {
     var gameEngine = new GameEngine();
     var circle;
     for (var i = 0; i < numPlayers; i++) {
-        circle = new CPM(gameEngine);
+        circle = new MLOACM(gameEngine);
         gameEngine.addEntity(circle);
     }
     
