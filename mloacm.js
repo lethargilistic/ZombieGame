@@ -39,21 +39,28 @@ var pythagoras = function(a, b)
 	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 }
 
+MLOACM.prototype.inFOV = function (other, range, fovAngle)
+{
+	var velocityDir = Math.atan(this.velocity.y/this.velocity.x);
+	var dir = direction(this, other);
+	return distance(this, other) < range 
+			&& (velocityDir - fovAngle/2 || velocityDir + fovAngle/2);
+}
+
 var leadRockThrow = function(human, zombie)
 {
 	//Figure out how fast rock moves
-	var rockVector = {x: human.velocity.x * 2, y: human.velocity.y * 2};
-	var rockVelocity = pythagoras(rockVector.x, rockVector.y)
+	var rockVelocity = pythagoras(human.velocity.x * 2, human.velocity.y * 2) * (5/6)
 	
 	//calculate how long it will take for the rock to hit the zombie
-	var distanceToZombie = pythagoras(human.x - zombie.x, human.y - zombie.y);
+	var distanceToZombie = distance(human, zombie);
 	var timeToZombie = distanceToZombie / rockVelocity;
 	
 	//estimate zombie's new position
 	var zombieFuturePosition = {x:zombie.x + zombie.velocity.x * timeToZombie,
 							y:zombie.y + zombie.velocity.y * timeToZombie};
 	
-	console.log(zombie.x, zombie.y, zombieFuturePosition);
+	//console.log(zombie.x, zombie.y, zombieFuturePosition);
 	
 	return zombieFuturePosition;
 }
@@ -65,8 +72,10 @@ MLOACM.prototype.selectAction = function () {
     var closest = 1000;
     var target = null;
     this.visualRadius = 500;
-	this.shootingRange = 150;
-
+	this.shootingRange = 200
+	this.fovAngle = 90;
+	
+	//look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
         var ent = this.game.zombies[i];
         var dist = distance(ent, this);
@@ -81,9 +90,12 @@ MLOACM.prototype.selectAction = function () {
             action.direction.y -= difY * acceleration / (dist * dist);
         }
     }
+	
+	//look for rocks
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
+		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
@@ -94,6 +106,7 @@ MLOACM.prototype.selectAction = function () {
         }
     }
 
+	//distance(this, target) < this.shootingRange
     if (target && distance(this, target) < this.shootingRange) {
         action.target = leadRockThrow(this, target);
         action.throwRock = true;
