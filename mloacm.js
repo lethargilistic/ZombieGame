@@ -39,51 +39,12 @@ var pythagoras = function(a, b)
 	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 }
 
-var dot = function (v1, v2)
+MLOACM.prototype.inFOV = function (other, range, fovAngle)
 {
-	var mag1 = pythagoras(v1.x, v1.y);
-	var mag2 = pythagoras(v2.x, v2.y);
-	var angleBetween = Math.atan(Math.abs(mag1.y - mag2.y), Math.abs(mag1.x - mag2.x));
-	return mag1 * mag2 * Math.cos(angleBetween);
-}
-
-//Algorithm from here: http://www.blackpawn.com/texts/pointinpoly/
-var pointInTriangle = function(point, triangleOrigin, sideLength, velocity, fovAngle)
-{	
-	//compute orientation of triangle
-	var orientation = Math.atan(velocity.y/velocity.x);
-	
-	//compute side vectors
-	fovAngle = fovAngle / 2;
-	var sideB = {x:sideLength * Math.cos(orientation + fovAngle),
-			y:sideLength * Math.sin(orientation + fovAngle)};
-	var sideC = {x:sideLength * Math.cos(orientation - fovAngle),
-			y:sideLength * Math.sin(orientation - fovAngle)};
-	
-	console.log(triangleOrigin, sideB, sideC);
-	
-	// Compute vectors
-	var v0 = {x: sideC.x - triangleOrigin.x,
-			y: sideC.y - triangleOrigin.y};
-	var v1 = {x: sideB.x - triangleOrigin.x,
-			y: sideB.y - triangleOrigin.y};
-	var v2 = {x: point.x - triangleOrigin.x,
-			y: point.y - triangleOrigin.y};
-
-	// Compute dot products
-	var dot00 = dot(v0, v0)
-	var dot01 = dot(v0, v1)
-	var dot02 = dot(v0, v2)
-	var dot11 = dot(v1, v1)
-	var dot12 = dot(v1, v2)
-
-	// Compute barycentric coordinates
-	var invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
-	var u = (dot11 * dot02 - dot01 * dot12) * invDenom
-	var v = (dot00 * dot12 - dot01 * dot02) * invDenom
-
-	// Check if point is in triangle
-	return (u >= 0) && (v >= 0) && (u + v < 1)
+	var velocityDir = Math.atan(this.velocity.y/this.velocity.x);
+	var dir = direction(this, other);
+	return distance(this, other) < range 
+			&& (velocityDir - fovAngle/2 || velocityDir + fovAngle/2);
 }
 
 var leadRockThrow = function(human, zombie)
@@ -113,7 +74,7 @@ MLOACM.prototype.selectAction = function () {
     var target = null;
     this.visualRadius = 500;
 	this.shootingRange = 200
-	this.fovAngle = 180;
+	this.fovAngle = 90;
 	
 	//look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
@@ -135,7 +96,8 @@ MLOACM.prototype.selectAction = function () {
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
 		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && pointInTriangle({x:ent.x, y:ent.y}, {x:this.x, y:this.y}, this.shootingRange, this.velocity, this.fovAngle)) {
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
+		//&& pointInTriangle({x:ent.x, y:ent.y}, {x:this.x, y:this.y}, this.shootingRange, this.velocity, this.fovAngle)) {
 		//&& this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
