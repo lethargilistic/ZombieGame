@@ -39,6 +39,53 @@ var pythagoras = function(a, b)
 	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 }
 
+var dot = function (v1, v2)
+{
+	var mag1 = pythagoras(v1.x, v1.y);
+	var mag2 = pythagoras(v2.x, v2.y);
+	var angleBetween = Math.atan(Math.abs(mag1.y - mag2.y), Math.abs(mag1.x - mag2.x));
+	return mag1 * mag2 * Math.cos(angleBetween);
+}
+
+//Algorithm from here: http://www.blackpawn.com/texts/pointinpoly/
+var pointInTriangle = function(point, triangleOrigin, sideLength, velocity, fovAngle)
+{	
+	//compute orientation of triangle
+	var orientation = Math.atan(velocity.y/velocity.x);
+	
+	//compute side vectors
+	fovAngle = fovAngle / 2;
+	var sideB = {x:sideLength * Math.cos(orientation + fovAngle),
+			y:sideLength * Math.sin(orientation + fovAngle)};
+	var sideC = {x:sideLength * Math.cos(orientation - fovAngle),
+			y:sideLength * Math.sin(orientation - fovAngle)};
+	
+	console.log(triangleOrigin, sideB, sideC);
+	
+	// Compute vectors
+	var v0 = {x: sideC.x - triangleOrigin.x,
+			y: sideC.y - triangleOrigin.y};
+	var v1 = {x: sideB.x - triangleOrigin.x,
+			y: sideB.y - triangleOrigin.y};
+	var v2 = {x: point.x - triangleOrigin.x,
+			y: point.y - triangleOrigin.y};
+
+	// Compute dot products
+	var dot00 = dot(v0, v0)
+	var dot01 = dot(v0, v1)
+	var dot02 = dot(v0, v2)
+	var dot11 = dot(v1, v1)
+	var dot12 = dot(v1, v2)
+
+	// Compute barycentric coordinates
+	var invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+	var u = (dot11 * dot02 - dot01 * dot12) * invDenom
+	var v = (dot00 * dot12 - dot01 * dot02) * invDenom
+
+	// Check if point is in triangle
+	return (u >= 0) && (v >= 0) && (u + v < 1)
+}
+
 var leadRockThrow = function(human, zombie)
 {
 	//Figure out how fast rock moves
@@ -53,7 +100,7 @@ var leadRockThrow = function(human, zombie)
 	var zombieFuturePosition = {x:zombie.x + zombie.velocity.x * timeToZombie,
 							y:zombie.y + zombie.velocity.y * timeToZombie};
 	
-	console.log(zombie.x, zombie.y, zombieFuturePosition);
+	//console.log(zombie.x, zombie.y, zombieFuturePosition);
 	
 	return zombieFuturePosition;
 }
@@ -65,7 +112,10 @@ MLOACM.prototype.selectAction = function () {
     var closest = 1000;
     var target = null;
     this.visualRadius = 500;
-
+	this.shootingRange = 200
+	this.fovAngle = 180;
+	
+	//look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
         var ent = this.game.zombies[i];
         var dist = distance(ent, this);
@@ -80,9 +130,13 @@ MLOACM.prototype.selectAction = function () {
             action.direction.y -= difY * acceleration / (dist * dist);
         }
     }
+	
+	//look for rocks
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
+		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && pointInTriangle({x:ent.x, y:ent.y}, {x:this.x, y:this.y}, this.shootingRange, this.velocity, this.fovAngle)) {
+		//&& this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
@@ -93,6 +147,7 @@ MLOACM.prototype.selectAction = function () {
         }
     }
 
+	//distance(this, target) < this.shootingRange
     if (target) {
         action.target = leadRockThrow(this, target);
         action.throwRock = true;
