@@ -97,8 +97,6 @@ MLOACM.prototype.selectAction = function () {
         var ent = this.game.rocks[i];
 		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
         if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
-		//&& pointInTriangle({x:ent.x, y:ent.y}, {x:this.x, y:this.y}, this.shootingRange, this.velocity, this.fovAngle)) {
-		//&& this.collide({ x: ent.x, y: ent.y, radius: this.visualRadius })) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
