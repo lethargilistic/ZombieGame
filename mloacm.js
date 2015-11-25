@@ -65,6 +65,7 @@ MLOACM.prototype.selectAction = function () {
     var closest = 1000;
     var target = null;
     this.visualRadius = 500;
+	this.shootingRange = 150;
 
     for (var i = 0; i < this.game.zombies.length; i++) {
         var ent = this.game.zombies[i];
@@ -93,7 +94,7 @@ MLOACM.prototype.selectAction = function () {
         }
     }
 
-    if (target) {
+    if (target && distance(this, target) < this.shootingRange) {
         action.target = leadRockThrow(this, target);
         action.throwRock = true;
     }
