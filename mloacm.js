@@ -42,6 +42,7 @@ var distanceFormula = function(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
 }
 
+/// --_--* so far not working
 MLOACM.prototype.avoidWalls = function(action, acceleration){
     var seeWall = 20;
     var xMin = 0;
@@ -49,6 +50,9 @@ MLOACM.prototype.avoidWalls = function(action, acceleration){
     var xMax = 800;
     var yMax = 800;
       
+    var moveAtAngle = 45;
+    var personNewAngle = moveAtAngle * Math.PI / 180;;
+    
     var fromBottomWall = 800 - this.y; //distance remaining till ent to wall
     var fromRightWall = 800 - this.x;
     
@@ -57,24 +61,46 @@ MLOACM.prototype.avoidWalls = function(action, acceleration){
     
     //if they see and will collide with the bottom
     if(this.collide({x: this.x, y: 800, radius: seeWall})) {
-        var dist = distanceFormula(this.x, this.x, this.y, 800);
-        var difY = (800 - this.y) / dist;
-        action.direction.y -= difY * acceleration / (dist * dist);
+//        var dist = distanceFormula(this.x, this.x, this.y, 800);
+//        var difY = (800 - this.y) / dist;
+//        action.direction.y -= difY * acceleration / (dist * dist) /45;
     }
     //if they see and will collide with right
     if(this.collide({x: 800, y: this.y, radius: seeWall})) {
-        var dist = distanceFormula(this.x, 800, this.y, this.y);
-        var difX = (800 - this.x) / dist;
-        action.direction.x -= difX * acceleration / (dist * dist);
+        
+//        var dist = distanceFormula(this.x, 800, this.y, this.y);
+//        var difX = (800 - this.x) / dist;
+//        action.direction.x -= difX * acceleration / (dist * dist) /45;
     }
     
+//    
     //if they see the bottom right corning
     if(this.collide({x: 800, y: 800, radius: seeWall})) {
-        var dist = distanceFormula(this.x, 800, this.y, 800);
-        var difX = (800 - this.x) / dist;
-        action.direction.x -= difX * acceleration / (dist * dist);
-        var difY = (800 - this.y) / dist;
-        action.direction.y -= difY * acceleration / (dist * dist);
+        
+        
+//        action.direction.x -= this.x + acceleration * Math.cos(personNewAngle);
+//        action.direction.y -= this.y + acceleration * Math.sin(personNewAngle);
+        
+        
+//        var dist = distanceFormula(this.x, 800, this.y, 800);
+//        var difX = (800 - this.x) / dist;
+//        action.direction.x -= difX * acceleration / (dist * dist) /90;
+//        var difY = (800 - this.y) / dist;
+//        action.direction.y -= difY * acceleration / (dist * dist) /90;
+    }
+    
+        //if they see the top left corning
+    if(this.collide({x: 0, y: 0, radius: seeWall})) {
+        
+        
+//         action.direction.x += this.x + acceleration * Math.cos(personNewAngle);
+//         action.direction.y += this.y + acceleration * Math.sin(personNewAngle);
+//         
+//        var dist = distanceFormula(this.x, 800, this.y, 800);
+//        var difX = (0 - this.x) / dist;
+//        action.direction.x -= difX * acceleration / (dist * dist) /90;
+//        var difY = (0 - this.y) / dist;
+//        action.direction.y -= difY * acceleration / (dist * dist) /90;
     }
     
     return action;   
@@ -91,7 +117,7 @@ MLOACM.prototype.inFOV = function (other, range, fovAngle)
 var leadRockThrow = function(human, zombie)
 {
 	//Figure out how fast rock moves
-	var rockVelocity = pythagoras(human.velocity.x * 2, human.velocity.y * 2) * (5/6);
+	var rockVelocity = pythagoras(human.velocity.x * 2, human.velocity.y * 2);
 	
 	//calculate how long it will take for the rock to hit the zombie
 	var distanceToZombie = distance(human, zombie);
@@ -112,9 +138,11 @@ MLOACM.prototype.selectAction = function () {
     var acceleration = 1000000;
     var closest = 1000;
     var target = null;
-    this.visualRadius = 500;
+    var fastestZombie = 0;
+    this.visualRadius = 300;
     this.shootingRange = 200;
-    this.fovAngle = 90;
+    this.collectionRange = 500;
+    this.fovAngle = 360;
     
     //look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
@@ -122,20 +150,21 @@ MLOACM.prototype.selectAction = function () {
         //how close is the zombie
         var dist = distance(ent, this);
         
+        //how fast does the zombie move, which is an object of x and y
+        var zombieSpeed = pythagoras(ent.velocity.x, ent.velocity.y);
         
-        //how fast does the zombie move?
-//        var zombieSpeed = pythagoras(ent.x, ent.y);
-
-
-        if (dist < closest) {
-            closest = dist;
-            target = ent;
+//        && zombieSpeed > fastestZombie
+//       fastestZombie = zombieSpeed;
+       
+        if (dist < closest && zombieSpeed > fastestZombie) {
+            closest = dist;            
+            target = ent;            
         }
-        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius})) {
+        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius}) && fastestZombie < this.visualRadius) {
             var difX = (ent.x - this.x) / dist;
             var difY = (ent.y - this.y) / dist;
-            action.direction.x -= difX * acceleration / (dist * dist);
-            action.direction.y -= difY * acceleration / (dist * dist);
+            action.direction.x -= (difX * acceleration / (dist * dist))/2;
+            action.direction.y -= (difY * acceleration / (dist * dist))/2;
         }
     }
     
@@ -147,8 +176,8 @@ MLOACM.prototype.selectAction = function () {
 	//look for rocks
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
-		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
+	//function(point, triangleOrigin, sideLength, velocity, fovAngle)
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.collectionRange, this.fovAngle)) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
