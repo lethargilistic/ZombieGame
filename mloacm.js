@@ -138,11 +138,11 @@ MLOACM.prototype.selectAction = function () {
     var acceleration = 1000000;
     var closest = 1000;
     var target = null;
-    var fastestZombie = 0;
+    var fastestClosestZombie = 0;
     this.visualRadius = 300;
     this.shootingRange = 200;
     this.collectionRange = 500;
-    this.fovAngle = 360;
+    this.fovAngle = 90;
     
     //look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
@@ -153,14 +153,17 @@ MLOACM.prototype.selectAction = function () {
         //how fast does the zombie move, which is an object of x and y
         var zombieSpeed = pythagoras(ent.velocity.x, ent.velocity.y);
         
-//        && zombieSpeed > fastestZombie
-//       fastestZombie = zombieSpeed;
+//        if(distance < this.visualRadius  && zombieSpeed > fastestClosestZombie){
+//            fastestClosestZombie = zombieSpeed;
+//        }      
        
-        if (dist < closest && zombieSpeed > fastestZombie) {
-            closest = dist;            
+        if (dist < closest && zombieSpeed > fastestClosestZombie) {
+            closest = dist;   
+            fastestClosestZombie = zombieSpeed;
             target = ent;            
         }
-        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius}) && fastestZombie < this.visualRadius) {
+        
+        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius}) ) {
             var difX = (ent.x - this.x) / dist;
             var difY = (ent.y - this.y) / dist;
             action.direction.x -= (difX * acceleration / (dist * dist))/2;
