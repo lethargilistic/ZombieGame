@@ -59,14 +59,6 @@ MLOACM.prototype.avoidWalls = function(action, acceleration){
     //corners, top left = 0,0; top right = 800,0
     //         bottom, left = 0,800; bottom right 800,800
     
-    if(this.collideRight()){
-        action.direction.x *= -1*acceleration;
-    }
-    
-    if(this.collideLeft()){
-        action.direction.x *= -1*acceleration;
-    }
-    
     //if they see and will collide with the bottom
     if(this.collide({x: this.x, y: 800, radius: seeWall})) {
 //        var dist = distanceFormula(this.x, this.x, this.y, 800);
