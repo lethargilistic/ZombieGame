@@ -1,7 +1,4 @@
-// find and replace MLOACM with your initials (i.e. ABC)
-// change this.name = "Your Chosen Name"
-
-// only change code in selectAction function()
+//Mike Overby and Ariel McNamara
 
 function MLOACM(game) {
     this.player = 1;
@@ -35,140 +32,103 @@ MLOACM.prototype.constructor = MLOACM;
 //Returns c
 var pythagoras = function(a, b){
 	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-};
+}
 
 //distance formula for the walls.
 var distanceFormula = function(x1, x2, y1, y2){
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
-};
+}
 
-/// --_--* so far not working
 MLOACM.prototype.avoidWalls = function(action, acceleration){
     var seeWall = 20;
     var xMin = 0;
     var yMin = 0;
     var xMax = 800;
     var yMax = 800;
-      
-    var moveAtAngle = 45;
-    var personNewAngle = moveAtAngle * Math.PI / 180;;
     
     var fromBottomWall = 800 - this.y; //distance remaining till ent to wall
     var fromRightWall = 800 - this.x;
     
+	var circleSpeed = 99999;
+	
     //corners, top left = 0,0; top right = 800,0
     //         bottom, left = 0,800; bottom right 800,800
     
     //if they see and will collide with the bottom
     if(this.collide({x: this.x, y: 800, radius: seeWall})) {
-//        var dist = distanceFormula(this.x, this.x, this.y, 800);
-//        var difY = (800 - this.y) / dist;
-//        action.direction.y -= 1 * acceleration;
+        var dist = distanceFormula(this.x, this.x, this.y, 800);
+        var difY = (800 - this.y) / dist;
+        action.direction.y -= difY * acceleration / (dist * dist);
+		action.direction.x += circleSpeed
     }
     //if they see and will collide with right
     if(this.collide({x: 800, y: this.y, radius: seeWall})) {
-        
-//        var dist = distanceFormula(this.x, 800, this.y, this.y);
-//        var difX = (800 - this.x) / dist;
-//        action.direction.x -= difX * acceleration / (dist * dist) /45;
+        var dist = distanceFormula(this.x, 800, this.y, this.y);
+        var difX = (800 - this.x) / dist;
+        action.direction.x -= difX * acceleration / (dist * dist);
+		action.direction.y -= circleSpeed
     }
-    
-//    
-    //if they see the bottom right corning
-    if(this.collide({x: 800, y: 800, radius: seeWall})) {
-//          action.direction.x -= 2 * acceleration;
-//          action.direction.y -= 2 * acceleration;
-        
-//        action.direction.x -= this.x + acceleration * Math.cos(personNewAngle);
-//        action.direction.y -= this.y + acceleration * Math.sin(personNewAngle);
-        
-        
-//        var dist = distanceFormula(this.x, 800, this.y, 800);
-//        var difX = (800 - this.x) / dist;
-//        action.direction.x -= difX * acceleration / (dist * dist) /90;
-//        var difY = (800 - this.y) / dist;
-//        action.direction.y -= difY * acceleration / (dist * dist) /90;
+    //if they see and will collide with top
+	if(this.collide({x: this.x, y: 0, radius: seeWall})) {
+        var dist = distanceFormula(this.x, this.x, this.y, 0);
+        var difY = (800 - this.y) / dist;
+        action.direction.y += difY * acceleration / (dist * dist);
+		action.direction.x -= circleSpeed
     }
-    
-        //if they see the top left corning
-    if(this.collide({x: 0, y: 0, radius: seeWall})) {
-        
-        
-//         action.direction.x += this.x + acceleration * Math.cos(personNewAngle);
-//         action.direction.y += this.y + acceleration * Math.sin(personNewAngle);
-//         
-//        var dist = distanceFormula(this.x, 800, this.y, 800);
-//        var difX = (0 - this.x) / dist;
-//        action.direction.x -= difX * acceleration / (dist * dist) /90;
-//        var difY = (0 - this.y) / dist;
-//        action.direction.y -= difY * acceleration / (dist * dist) /90;
+	//if they see and will collide with left
+	if(this.collide({x: 0, y: this.y, radius: seeWall})) {
+        var dist = distanceFormula(this.x, 0, this.y, this.y);
+        var difX = (800 - this.x) / dist;
+        action.direction.x += difX * acceleration / (dist * dist);
+		action.direction.y += circleSpeed
     }
+/*     //if they see the bottom right corning
+    else if(this.collide({x: 800, y: 800, radius: seeWall})) {
+        var dist = distanceFormula(this.x, 800, this.y, 800);
+        var difX = (800 - this.x) / dist;
+        action.direction.x -= difX * acceleration / (dist * dist);
+        var difY = (800 - this.y) / dist;
+        action.direction.y -= difY * acceleration / (dist * dist);
+    } */
     
     return action;   
-};
+}
 
+//TODO: fix or remove
 MLOACM.prototype.inFOV = function (other, range, fovAngle)
 {
 	var velocityDir = Math.atan(this.velocity.y/this.velocity.x);
 	var dir = direction(this, other);
-	return distance(this, other) < range 
-			&& (velocityDir - fovAngle/2 || velocityDir + fovAngle/2);
-};
+	return distance(this, other) < range;
+			//&& (velocityDir - fovAngle/2 || velocityDir + fovAngle/2);
+}
 
 var leadRockThrow = function(human, zombie)
 {
 	//Figure out how fast rock moves
-	var rockVelocity = pythagoras(human.velocity.x * 2, human.velocity.y * 2);
+	var rockSpeed = pythagoras(human.velocity.x * 2, human.velocity.y * 2);
 	
 	//calculate how long it will take for the rock to hit the zombie
 	var distanceToZombie = distance(human, zombie);
-	var timeToZombie = distanceToZombie / rockVelocity;
+	var timeToZombie = distanceToZombie / rockSpeed;
 	
 	//estimate zombie's new position
-	var zombieFuturePosition = {x:zombie.x + zombie.velocity.x * timeToZombie,
-							y:zombie.y + zombie.velocity.y * timeToZombie};
+	var zombieFuturePosition = {x:Math.abs(zombie.x + zombie.velocity.x * timeToZombie),
+							y:Math.abs(zombie.y + zombie.velocity.y * timeToZombie)};
 	
 	//console.log(zombie.x, zombie.y, zombieFuturePosition);
 	
 	return zombieFuturePosition;
-};
-
-MLOACM.prototype.whichZombieToShootFirst = function (ent, target){
-    var newTarget = target;
-    //what is the distance to the human
-    var targetDist = distance(target, this);
-    var currentEntDist = distance(ent, this);
-    
-    //what is the speed at which they are approching the human
-    var speedOfTarget = pythagoras(target.velocity.x, target.velocity.y);
-    var speedOfCurrentEnt = pythagoras(ent.velocity.x, ent.velocity.y);
-    
-    //how long will it take each of them to reach the human
-    var timeTarget = (targetDist/speedOfTarget);
-    var timeEnt = (currentEntDist/speedOfCurrentEnt);
-    
-//    console.log("Distance of target: " + targetDist + "\nSpeed of target: " 
-//            + speedOfTarget + "\nTime of Target: " + timeTarget +
-//            "\n\nDistance of ent: " + currentEntDist + "\nSpeed of ent: " 
-//            + speedOfCurrentEnt + "\nTime of ent: " + timeEnt);
-    
-    if(timeEnt < timeTarget){
-        newTarget = ent;
-//        console.log("NEW TARGET = ENT");
-    }
-    
-    return newTarget;    
-};
+}
 
 MLOACM.prototype.selectAction = function () {
 
     var action = { direction: { x: 0, y: 0 }, throwRock: false, target: null};
     var acceleration = 1000000;
-    var closest = 1000;
+    var closest = Number.MAX_VALUE;
     var target = null;
-    this.visualRadius = 300;
-    this.shootingRange = 100;
-    this.collectionRange = 500;
+    this.visualRadius = 500;
+    this.shootingRange = 200;
     this.fovAngle = 90;
     
     //look for zombies
@@ -177,24 +137,20 @@ MLOACM.prototype.selectAction = function () {
         //how close is the zombie
         var dist = distance(ent, this);
         
-//        if (dist < closest){ 
-//            closest = dist;   
-//            target = ent;    
-//        }
-
-        if(i === 0){           
-            target = ent;
-        }         
-        if(target !== null){
-            //identify which zombie will reach you first
-            target = this.whichZombieToShootFirst(ent, target);    
-        }         
         
-        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius}) ) {
+        //how fast does the zombie move?
+//        var zombieSpeed = pythagoras(ent.x, ent.y);
+
+
+        if (dist < closest) {
+            closest = dist;
+            target = ent;
+        }
+        if (this.collide({x: ent.x, y: ent.y, radius: this.visualRadius})) {
             var difX = (ent.x - this.x) / dist;
             var difY = (ent.y - this.y) / dist;
-            action.direction.x -= (difX * acceleration / (dist * dist))/2;
-            action.direction.y -= (difY * acceleration / (dist * dist))/2;
+            action.direction.x -= difX * acceleration / (dist * dist);
+            action.direction.y -= difY * acceleration / (dist * dist);
         }
     }
     
@@ -202,11 +158,12 @@ MLOACM.prototype.selectAction = function () {
     //    avoid walls
     action = this.avoidWalls(action, acceleration);
     
-    //look for rocks
+
+	//look for rocks
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
-	//function(point, triangleOrigin, sideLength, velocity, fovAngle)
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.collectionRange, this.fovAngle)) {
+		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
