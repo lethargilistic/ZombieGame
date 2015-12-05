@@ -1,4 +1,7 @@
-//Mike Overby and Ariel McNamara
+// find and replace MLOACM with your initials (i.e. ABC)
+// change this.name = "Your Chosen Name"
+
+// only change code in selectAction function()
 
 function MLOACM(game) {
     this.player = 1;
@@ -34,20 +37,8 @@ var pythagoras = function(a, b){
 	return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 }
 
-//distance formula for the walls.
-var distanceFormula = function(x1, x2, y1, y2){
-    return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
-}
-
 MLOACM.prototype.avoidWalls = function(action, acceleration){
     var seeWall = 20;
-    var xMin = 0;
-    var yMin = 0;
-    var xMax = 800;
-    var yMax = 800;
-    
-    var fromBottomWall = 800 - this.y; //distance remaining till ent to wall
-    var fromRightWall = 800 - this.x;
     
 	var circleSpeed = 99999;
 	
@@ -56,51 +47,34 @@ MLOACM.prototype.avoidWalls = function(action, acceleration){
     
     //if they see and will collide with the bottom
     if(this.collide({x: this.x, y: 800, radius: seeWall})) {
-        var dist = distanceFormula(this.x, this.x, this.y, 800);
+        var dist = distance(this, {x:this.x, y:800});
         var difY = (800 - this.y) / dist;
         action.direction.y -= difY * acceleration / (dist * dist);
 		action.direction.x += circleSpeed
     }
     //if they see and will collide with right
     if(this.collide({x: 800, y: this.y, radius: seeWall})) {
-        var dist = distanceFormula(this.x, 800, this.y, this.y);
+        var dist = distance(this, {x:800, y:this.y});
         var difX = (800 - this.x) / dist;
         action.direction.x -= difX * acceleration / (dist * dist);
 		action.direction.y -= circleSpeed
     }
     //if they see and will collide with top
 	if(this.collide({x: this.x, y: 0, radius: seeWall})) {
-        var dist = distanceFormula(this.x, this.x, this.y, 0);
+        var dist = distance(this, {x:this.x, y:0});
         var difY = (800 - this.y) / dist;
         action.direction.y += difY * acceleration / (dist * dist);
 		action.direction.x -= circleSpeed
     }
 	//if they see and will collide with left
 	if(this.collide({x: 0, y: this.y, radius: seeWall})) {
-        var dist = distanceFormula(this.x, 0, this.y, this.y);
+        var dist = distance(this, {x:0, y:this.y});
         var difX = (800 - this.x) / dist;
         action.direction.x += difX * acceleration / (dist * dist);
 		action.direction.y += circleSpeed
     }
-/*     //if they see the bottom right corning
-    else if(this.collide({x: 800, y: 800, radius: seeWall})) {
-        var dist = distanceFormula(this.x, 800, this.y, 800);
-        var difX = (800 - this.x) / dist;
-        action.direction.x -= difX * acceleration / (dist * dist);
-        var difY = (800 - this.y) / dist;
-        action.direction.y -= difY * acceleration / (dist * dist);
-    } */
     
     return action;   
-}
-
-//TODO: fix or remove
-MLOACM.prototype.inFOV = function (other, range, fovAngle)
-{
-	var velocityDir = Math.atan(this.velocity.y/this.velocity.x);
-	var dir = direction(this, other);
-	return distance(this, other) < range;
-			//&& (velocityDir - fovAngle/2 || velocityDir + fovAngle/2);
 }
 
 var leadRockThrow = function(human, zombie)
@@ -128,8 +102,7 @@ MLOACM.prototype.selectAction = function () {
     var closest = Number.MAX_VALUE;
     var target = null;
     this.visualRadius = 500;
-    this.shootingRange = 200;
-    this.fovAngle = 90;
+    this.shootingRange = 100;
     
     //look for zombies
     for (var i = 0; i < this.game.zombies.length; i++) {
@@ -153,17 +126,12 @@ MLOACM.prototype.selectAction = function () {
             action.direction.y -= difY * acceleration / (dist * dist);
         }
     }
-    
-    
-    //    avoid walls
-    action = this.avoidWalls(action, acceleration);
-    
 
 	//look for rocks
     for (var i = 0; i < this.game.rocks.length; i++) {
         var ent = this.game.rocks[i];
 		//function(point, triangleOrigin, sideLength, velocity, fovAngle)
-        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && this.inFOV(ent, this.shootingRange, this.fovAngle)) {
+        if (!ent.removeFromWorld && !ent.thrown && this.rocks < 2 && distance(this, ent) < this.visualRadius) {
             var dist = distance(this, ent);
             if (dist > this.radius + ent.radius) {
                 var difX = (ent.x - this.x) / dist;
@@ -174,6 +142,9 @@ MLOACM.prototype.selectAction = function () {
         }
     }
 
+	//avoid walls
+    action = this.avoidWalls(action, acceleration);
+	
     //distance(this, target) < this.shootingRange
     //This is for shooting the zombies
     if (target && distance(this, target) < this.shootingRange) {
